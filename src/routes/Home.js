@@ -1,32 +1,45 @@
 import React, { useEffect, useState } from "react";
-import { dbService, dbAddDoc, dbCollection, dbGetDoc } from "fbase";
+import { dbService, dbAddDoc, dbCollection } from "fbase";
+import { onSnapshot, orderBy, query } from "firebase/firestore";
 
-const Home = () => {
+const Home = ({ userId }) => {
   const [nweet, setNweet] = useState("");
   const [nweets, setNweets] = useState([]);
-  const getNweets = async () => {
-    try {
-      const querySnapshot = await dbGetDoc(dbCollection(dbService, "nweets"));
-      querySnapshot.forEach((document) => {
-        const nweetObject = {
-          ...document.data(),
-          id: document.id,
-        };
-        setNweets((prev) => [nweetObject, ...prev]);
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  //   const getNweets = async () => {
+  //     try {
+  //       const querySnapshot = await dbGetDoc(dbCollection(dbService, "nweets"));
+  //       querySnapshot.forEach((document) => {
+  //         const nweetObject = {
+  //           ...document.data(),
+  //           id: document.id,
+  //         };
+  //         setNweets((prev) => [nweetObject, ...prev]);
+  //       });
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
   useEffect(() => {
-    getNweets();
+    // getNweets();
+    const q = query(
+      dbCollection(dbService, "nweets"),
+      orderBy("createdAt", "desc")
+    );
+    onSnapshot(q, (snapshot) => {
+      const nweetArray = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setNweets(nweetArray);
+    });
   }, []);
   const onSubmit = async (event) => {
     try {
       event.preventDefault();
       const docRef = await dbAddDoc(dbCollection(dbService, "nweets"), {
-        nweet,
-        createAt: Date.now(),
+        text: nweet,
+        createdAt: Date.now(),
+        creatorId: userId,
       });
       console.log("Document written with ID: ", docRef);
     } catch (error) {
@@ -39,7 +52,6 @@ const Home = () => {
       target: { value },
     } = event;
     setNweet(value);
-    console.log(nweets);
   };
   return (
     <div>
@@ -56,7 +68,7 @@ const Home = () => {
       <div>
         {nweets.map((nweet) => (
           <div key={nweet.id}>
-            <h4>{nweet.nweet}</h4>
+            <h4>{nweet.text}</h4>
           </div>
         ))}
       </div>
