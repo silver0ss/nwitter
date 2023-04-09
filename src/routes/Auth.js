@@ -1,7 +1,9 @@
 import {
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   getAuth,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from "firebase/auth";
 import React, { useState } from "react";
 
@@ -56,6 +58,12 @@ const Auth = () => {
     }
   };
   const toggleAccount = () => setnewAccount((prev) => !prev);
+  const googleLogInClick = async () => {
+    const provider = new GoogleAuthProvider();
+    const auth = getAuth();
+    const data = await signInWithPopup(auth, provider);
+    console.log(data);
+  };
   return (
     <div>
       <form onSubmit={onSubmit}>
@@ -86,7 +94,7 @@ const Auth = () => {
         {newAccount ? "Create Account" : "Sign In"}
       </span>
       <div>
-        <button>Continue with Google</button>
+        <button onClick={googleLogInClick}>Continue with Google</button>
       </div>
     </div>
   );
